@@ -1,7 +1,28 @@
-import { Elysia } from "elysia";
+import { ElysiaApiAdapter } from "./adapter/api/elysia";
+import { FileSystemPhotoRepository } from "./adapter/photo/filesystem/filesystem.photo-repository";
+import { InMemoryDeviceRepository } from "./adapter/repository/inmemory";
+import { ComputerService, DeviceService, MedicalDeviceService } from "./core/service";
 
-const app = new Elysia().get("/", () => "Hello Elysia").listen(3000);
+const deviceRepository = new InMemoryDeviceRepository()
+const photoRepository = new FileSystemPhotoRepository()
 
-console.log(
-  `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`
-);
+const computerService = new ComputerService(
+    deviceRepository, 
+    photoRepository, 
+    new URL("http://localhost:3000/api")
+)
+
+const deviceService = new DeviceService(deviceRepository)
+
+const medicalDeviceService = new MedicalDeviceService(
+    deviceRepository,
+    photoRepository
+)
+
+const app = new ElysiaApiAdapter(
+    computerService,
+    deviceService,
+    medicalDeviceService
+)
+
+app.run()
